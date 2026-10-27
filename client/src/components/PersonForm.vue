@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, watch } from 'vue';
+import EventPhotoUpload from './EventPhotoUpload.vue';
 
 const props = defineProps({ person: { type: Object, default: null } });
 const emit = defineEmits(['save', 'cancel']);
@@ -7,6 +8,7 @@ const emit = defineEmits(['save', 'cancel']);
 const form = reactive({
   first_name: '',
   last_name: '',
+  maiden_name: '',
   sex: 'U',
   birth_date: '',
   birth_place: '',
@@ -21,6 +23,7 @@ watch(
     Object.assign(form, {
       first_name: person?.first_name ?? '',
       last_name: person?.last_name ?? '',
+      maiden_name: person?.maiden_name ?? '',
       sex: person?.sex ?? 'U',
       birth_date: person?.birth_date ?? '',
       birth_place: person?.birth_place ?? '',
@@ -43,6 +46,7 @@ function submit() {
     <div class="form-grid">
       <label>Imie <input name="first_name" v-model="form.first_name" /></label>
       <label>Nazwisko <input name="last_name" v-model="form.last_name" /></label>
+      <label>Nazwisko rodowe <input name="maiden_name" v-model="form.maiden_name" /></label>
       <label>
         Plec
         <select name="sex" v-model="form.sex">
@@ -55,6 +59,11 @@ function submit() {
       <label>Miejsce urodzenia <input name="birth_place" v-model="form.birth_place" /></label>
       <label>Data smierci <input name="death_date" v-model="form.death_date" /></label>
       <label>Miejsce smierci <input name="death_place" v-model="form.death_place" /></label>
+    </div>
+    <div v-if="person?.id" class="photos-section">
+      <h4>Zdjecia</h4>
+      <EventPhotoUpload owner_type="person" :owner_id="person.id" event_type="birth" />
+      <EventPhotoUpload owner_type="person" :owner_id="person.id" event_type="death" />
     </div>
     <label class="notes-field">Notatki <textarea name="notes" v-model="form.notes" rows="3"></textarea></label>
     <div class="form-actions">
@@ -73,6 +82,17 @@ function submit() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px 16px;
+}
+
+.photos-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.photos-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
 }
 
 .notes-field {
