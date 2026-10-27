@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import api from '../data/index.js';
 
 const emit = defineEmits(['imported']);
 const importing = ref(false);
@@ -11,20 +12,22 @@ async function handleFileChange(event) {
   importing.value = true;
   error.value = '';
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await fetch('/api/gedcom/import', { method: 'POST', body: formData });
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw new Error(body.error || 'import failed');
-    }
-    const result = await response.json();
-    emit('imported', result);
+    const buffer = await file.arrayBuffer();
+    const result = await api.importGedcomFile(buffer);
+    emit('imported', { personCount: result.personsCreated });
   } catch (err) {
     error.value = err.message;
   } finally {
     importing.value = false;
     event.target.value = '';
+  }
+}
+
+async function handleExport() {
+  try {
+    await api.downloadGedcomFile();
+  } catch (err) {
+    error.value = err.message;
   }
 }
 </script>
@@ -33,9 +36,11 @@ async function handleFileChange(event) {
   <div class="gedcom-panel">
     <label class="upload-button">
       Importuj GEDCOM
-      <input type="file" accept=".ged" @change="handleFileChange" hidden />
+      <input type="file" accept=".ged" @change="handleFileChange" :disabled="importing" hidden />
     </label>
-    <a class="export-button" href="/api/gedcom/export">Eksportuj GEDCOM</a>
+    <button type="button" class="export-button" @click="handleExport" :disabled="importing">
+      Eksportuj GEDCOM
+    </button>
     <span v-if="importing" class="status">Importowanie...</span>
     <span v-if="error" class="error">{{ error }}</span>
   </div>
@@ -60,11 +65,18 @@ async function handleFileChange(event) {
   color: var(--color-text, #1f2430);
   cursor: pointer;
   text-decoration: none;
+  font-family: inherit;
 }
 
-.upload-button:hover,
-.export-button:hover {
+.upload-button:hover:not(:disabled),
+.export-button:hover:not(:disabled) {
   border-color: var(--color-primary, #3b5bdb);
+}
+
+.upload-button:disabled,
+.export-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .status {
