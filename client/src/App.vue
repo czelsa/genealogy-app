@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { api } from './api/client.js';
+import api from './data/index.js';
 import TreeView from './components/TreeView.vue';
 import PersonForm from './components/PersonForm.vue';
 import FamilyEditor from './components/FamilyEditor.vue';

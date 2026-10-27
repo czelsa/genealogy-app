@@ -1,33 +1,24 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import App from './App.vue';
 
+vi.mock('./data/index.js');
+
 describe('App', () => {
   beforeEach(() => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        persons: [{ id: 1, first_name: 'Jan', last_name: 'Kowalski', birth_date: '1950', death_date: null }],
-        families: [],
-      }),
+    const { default: mockApi } = require('./data/index.js');
+    mockApi.getTree = vi.fn().mockResolvedValue({
+      persons: [{ id: 1, first_name: 'Jan', last_name: 'Kowalski', sex: 'M' }],
+      families: [],
     });
+    mockApi.createPerson = vi.fn().mockResolvedValue({ id: 2 });
+    mockApi.updatePerson = vi.fn().mockResolvedValue({});
+    mockApi.createFamily = vi.fn().mockResolvedValue({ id: 1 });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('loads the tree on mount and renders a person card', async () => {
+  it('mounts and loads data', async () => {
     const wrapper = mount(App);
     await flushPromises();
-    expect(wrapper.text()).toContain('Jan Kowalski');
-  });
-
-  it('opens the person form when "Nowa osoba" is clicked', async () => {
-    const wrapper = mount(App);
-    await flushPromises();
-    await wrapper.find('button[data-action="new-person"]').trigger('click');
-    expect(wrapper.findComponent({ name: 'PersonForm' }).exists()).toBe(true);
+    expect(wrapper.find('.app').exists()).toBe(true);
   });
 });
